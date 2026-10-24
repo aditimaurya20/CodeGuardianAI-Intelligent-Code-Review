@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Code</title>
+    <link rel="stylesheet"
+          href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">
+        Code Guardian AI
+    </div>
+
+    <div class="nav-links">
+        <a href="/upload/">Home</a>
+        <a href="/login/">Login</a>
+        <a href="/logout/">Logout</a>
+    </div>
+</nav>
+
+<section class="hero upload-hero">
+
+    <h1>Upload Your Code</h1>
+    <p>Welcome, {{ request.user.username }}</p>
+
+    <div class="upload-options">
+
+        <!-- Upload Code File Card -->
+        <div class="option-card file-card">
+
+            <h2>📁 Upload Code File</h2>
+            <p>Choose a source-code file and select its language.</p>
+
+            <form method="POST"
+                  enctype="multipart/form-data"
+                  class="auth-form">
+
+                {% csrf_token %}
+
+                <input type="file"
+                       name="code_file"
+                       required>
+
+                <select name="language">
+                    <option value="Python">Python</option>
+                    <option value="C++">C++</option>
+                    <option value="Java">Java</option>
+                </select>
+
+                {% if error %}
+                <div class="upload-error">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <button type="submit" class="btn">
+                    Upload Code
+                </button>
+
+            </form>
+        </div>
+
+        <!-- OR Divider -->
+        <div class="or-divider">
+            <span>OR</span>
+        </div>
+
+        <!-- GitHub Repository Card -->
+        <div class="option-card github-card">
+
+            <h2>🐙 Analyze GitHub Repository</h2>
+            <p>
+                Enter a GitHub repository URL to analyze
+                the supported source-code files in your project.
+            </p>
+
+            <form method="POST" class="auth-form">
+
+                {% csrf_token %}
+
+                <input
+                    type="url"
+                    name="repository_url"
+                    placeholder="https://github.com/username/repository"
+                    value="{{ repository_url|default:'' }}"
+                    required
+                >
+
+                <button
+                    type="submit"
+                    class="btn"
+                    name="action"
+                    value="analyze_github">
+                    Analyze GitHub Repository
+                </button>
+
+            </form>
+
+            {% if github_error %}
+            <div class="upload-error">
+                {{ github_error }}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+</section>
+
+</body>
+</html>

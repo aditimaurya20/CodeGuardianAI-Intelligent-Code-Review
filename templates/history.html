@@ -1,0 +1,100 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Analysis History</title>
+
+    <link rel="stylesheet"
+          href="{% static 'css/style.css' %}">
+
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <div class="logo">
+        Code Guardian AI
+    </div>
+
+    <div class="nav-links">
+
+        <a href="/">Home</a>
+
+        <a href="/upload/">Upload</a>
+
+        <a href="/history/">History</a>
+
+    </div>
+
+</nav>
+
+
+<div class="result-container">
+
+    <h1 class="result-heading">
+        Analysis History
+    </h1>
+
+
+    {% if histories %}
+
+        <div class="dashboard">
+
+        {% for history in histories %}
+
+            <div class="card">
+
+                <h2>
+                    {{ history.code_file.file.name }}
+                </h2>
+
+                <p>
+                    Language:
+                    {{ history.language }}
+                </p>
+
+                <p>
+                    Quality Score:
+                    {{ history.quality_score }}%
+                </p>
+
+                <p>
+                    Analyzed On:
+                    {{ history.created_at|date:"d M Y, h:i A" }}
+                </p>
+
+                <a href="{% url 'history_detail' history.id %}">
+                    View Analysis
+                </a>
+
+            </div>
+
+        {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="suggestion-box">
+
+            <h2>
+                No Analysis History
+            </h2>
+
+            <p>
+                You have not analyzed any code yet.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+
+</html>

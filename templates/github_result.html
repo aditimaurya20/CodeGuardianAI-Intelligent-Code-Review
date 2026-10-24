@@ -1,0 +1,270 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Project Analysis | Code Guardian AI</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">Code Guardian AI</div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/upload/">Upload</a>
+        <a href="/history/">History</a>
+    </div>
+</nav>
+
+<main class="result-container github-report">
+
+    <h1 class="result-heading">GitHub Project Review Report</h1>
+    <p class="github-report-subtitle">
+        Overview of repository quality, code metrics, complexity and detected issues.
+    </p>
+
+    <!-- REPOSITORY DETAILS -->
+    <section class="full-section github-repository">
+        <div class="repository-details">
+            <div class="repository-info">
+                <h2>Repository Details</h2>
+                <p><strong>Repository:</strong> {{ repository }}</p>
+
+                {% if repository_url %}
+                <p class="github-repository-link">
+                    <a href="{{ repository_url }}" target="_blank"
+                    rel="noopener noreferrer">View GitHub Repository ↗</a></p>
+                {% endif %}
+            </div>
+
+            <div class="repository-actions">
+                <a href="{% url 'download_github_pdf' %}" class="history-btn">Download PDF Report</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROJECT SUMMARY -->
+    <section class="summary-grid github-summary-grid">
+        <div class="card summary-card">
+            <h3>Total Files</h3>
+            <p class="summary-value">{{ project_analysis.total_files|default:0 }}</p>
+        </div>
+
+        <div class="card summary-card">
+            <h3>Successfully Analyzed</h3>
+            <p class="summary-value">{{ project_analysis.successful_files|default:0 }}</p>
+        </div>
+
+        <div class="card summary-card">
+            <h3>Failed Files</h3>
+            <p class="summary-value">{{ project_analysis.failed_files|default:0 }}</p>
+        </div>
+
+        <div class="card summary-card">
+            <h3>Project Quality Score</h3>
+            <p class="summary-value">
+                {% if project_analysis.quality_score != None %}
+                    {{ project_analysis.quality_score }}%
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+        </div>
+    </section>
+
+    <!-- PROJECT METRICS -->
+    <section class="dashboard-top github-dashboard">
+
+        <div class="card dashboard-large">
+            <h2>Project Code Metrics</h2>
+
+            <div class="metric-list">
+                <div class="metric-row">
+                    <span>Total Lines</span>
+                    <strong>{{ project_analysis.metrics.total_lines|default:0 }}</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Code Lines</span>
+                    <strong>{{ project_analysis.metrics.code_lines|default:0 }}</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Blank Lines</span>
+                    <strong>{{ project_analysis.metrics.blank_lines|default:0 }}</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Comment Lines</span>
+                    <strong>{{ project_analysis.metrics.comment_lines|default:0 }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="card dashboard-large">
+            <h2>Project Complexity</h2>
+
+            <div class="metric-list">
+                <div class="metric-row">
+                    <span>Total Loops</span>
+                    <strong>{{ project_analysis.complexity.loops|default:0 }}</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Total Conditions</span>
+                    <strong>{{ project_analysis.complexity.conditions|default:0 }}</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Complexity Level</span>
+                    <strong>{{ project_analysis.complexity.level|default:"N/A" }}</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Complexity Score</span>
+                    <strong>{{ project_analysis.complexity.score|default:0 }}</strong>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- ISSUE SEVERITY -->
+    <section class="severity-summary github-severity-summary">
+        <div class="severity-card high">
+            <h3>🔴 High</h3>
+            <p>{{ project_analysis.severity_summary.high|default:0 }}</p>
+        </div>
+
+        <div class="severity-card medium">
+            <h3>🟠 Medium</h3>
+            <p>{{ project_analysis.severity_summary.medium|default:0 }}</p>
+        </div>
+
+        <div class="severity-card low">
+            <h3>🟡 Low</h3>
+            <p>{{ project_analysis.severity_summary.low|default:0 }}</p>
+        </div>
+
+        <div class="severity-card total">
+            <h3>Total Issues</h3>
+            <p>{{ project_analysis.total_issues|default:0 }}</p>
+        </div>
+    </section>
+
+    <!-- FILE-BY-FILE ANALYSIS -->
+    <section class="issues-section github-files-section">
+        <div class="github-section-heading">
+            <div>
+                <h2>📁 File-by-File Analysis</h2>
+                <p>Review each file's analysis status, metrics and detected issues.</p>
+            </div>
+            <span class="github-file-count">
+                {{ project_analysis.total_files|default:0 }} files
+            </span>
+        </div>
+
+        {% for file in project_analysis.files %}
+        <article class="full-section github-file-card">
+
+            <div class="github-file-heading">
+                <div class="github-file-name">
+                    <h3>{{ file.path|default:file.name }}</h3>
+                    <p><strong>Language:</strong> {{ file.language|default:"Unknown" }}</p>
+                </div>
+
+                <div class="github-status">
+                    {% if file.analysis.success == False %}
+                        <span class="github-status-badge failed">
+                            Analysis Failed
+                        </span>
+                    {% else %}
+                        <span class="github-status-badge completed">
+                            Analysis Completed
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if file.analysis.success == False and file.analysis.error %}
+            <p class="github-analysis-error">
+                {{ file.analysis.error }}
+            </p>
+            {% endif %}
+
+            <div class="metric-list github-file-metrics">
+                <div class="metric-row">
+                    <span>Total Lines</span>
+                    <strong>{{ file.analysis.metrics.total_lines|default:0 }}</strong>
+                </div>
+
+                <div class="metric-row">
+                    <span>Quality Score</span>
+                    <strong>
+                        {% if file.analysis.quality_score != None %}
+                            {{ file.analysis.quality_score }}
+                        {% else %}
+                            {{ file.analysis.scores.quality.score|default:"N/A" }}
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="metric-row">
+                    <span>Total Issues</span>
+                    <strong>
+                        {{ file.analysis.severity_summary.total|default:file.analysis.total_static_issues|default:0 }}
+                    </strong>
+                </div>
+            </div>
+
+            <div class="github-detected-issues">
+                <h4>Detected Issues</h4>
+
+                {% if file.analysis.issues %}
+                <div class="issues-table-container">
+                    <table class="issues-table">
+                        <thead>
+                            <tr>
+                                <th>Severity</th>
+                                <th>Line</th>
+                                <th>Type</th>
+                                <th>Issue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for issue in file.analysis.issues %}
+                            <tr>
+                                <td>
+                                    <span class="severity-badge severity-{{ issue.severity|default:'unknown'|lower }}">
+                                        {{ issue.severity|default:"Unknown" }}
+                                    </span>
+                                </td>
+                                <td>{{ issue.line|default:"-" }}</td>
+                                <td>{{ issue.type|default:issue.code|default:"-" }}</td>
+                                <td>{{ issue.message|default:"No description available" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="no-issues">No issues reported for this file.</p>
+                {% endif %}
+            </div>
+
+        </article>
+        {% empty %}
+        <div class="no-issues github-empty-state">
+            <p>No analyzed files are available to display.</p>
+        </div>
+        {% endfor %}
+    </section>
+
+    <!-- COMPLETION -->
+    <div class="completion-box">
+        <h2>Project Analysis Complete</h2>
+        <p>Your GitHub repository analysis has finished.</p>
+        <a href="/upload/" class="history-btn">Analyze Another Project</a>
+    </div>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,656 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analysis Result</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<script>
+function copyOptimizedCode() {
+    const code = document.getElementById("optimized-code").innerText;
+    navigator.clipboard.writeText(code);
+    alert("Optimized code copied!");
+}
+</script>
+<body>
+
+<!-- NAVIGATION BAR -->
+<nav class="navbar">
+    <div class="logo">
+        Code Guardian AI
+    </div>
+
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/upload/">Upload</a>
+        <a href="/history/">History</a>
+    </div>
+</nav>
+
+<!-- RESULT CONTAINER -->
+<div class="result-container">
+
+    <h1 class="result-heading">Intelligent Code Review Report</h1>
+    <div style="display: flex; justify-content: flex-end; margin: 16px 0;">
+        <a href="{% url 'download_result_pdf' %}" class="history-btn">
+            Download PDF Report
+        </a>
+    </div>
+    <!-- PROGRAMMING LANGUAGE -->
+    <div class="language-badge">
+        {{ analysis.language }}
+    </div>
+
+    <!-- TOP DASHBOARD -->
+    <div class="dashboard-top">
+
+        <!-- CODE METRICS -->
+        <div class="card dashboard-large">
+            <h2>Code Metrics</h2>
+
+            <div class="metric-list">
+                <div class="metric-row">
+                    <span>Total Lines</span>
+                    <strong>{{ analysis.metrics.total_lines|default:"N/A" }}</strong>
+                </div>
+
+                <div class="metric-row">
+                    <span>Code Lines</span>
+                    <strong>{{ analysis.metrics.code_lines|default:"N/A" }}</strong>
+                </div>
+
+                <div class="metric-row">
+                    <span>Blank Lines</span>
+                    <strong>{{ analysis.metrics.blank_lines|default:"N/A" }}</strong>
+                </div>
+
+                <div class="metric-row">
+                    <span>Comment Lines</span>
+                    <strong>{{ analysis.metrics.comment_lines|default:"N/A" }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPLEXITY ANALYSIS -->
+        <div class="card dashboard-large">
+            <h2>Complexity Analysis</h2>
+
+            <div class="metric-list">
+                <div class="metric-row">
+                    <span>Loops</span>
+                    <strong>{{ analysis.complexity.loops|default:"N/A" }}</strong>
+                </div>
+
+                <div class="metric-row">
+                    <span>Conditions</span>
+                    <strong>{{ analysis.complexity.conditions|default:"N/A" }}</strong>
+                </div>
+
+                <div class="metric-row">
+                    <span>Complexity Level</span>
+                    <strong>{{ analysis.complexity.level|default:"N/A" }}</strong>
+                </div>
+
+                <div class="metric-row">
+                    <span>Time Complexity</span>
+                    <strong>{{ analysis.complexity.time_complexity|default:"N/A" }}</strong>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SEVERITY SUMMARY -->
+    <div class="severity-summary">
+
+        <div class="severity-card high">
+            <h3>🔴 High</h3>
+            <p>{{ severity_summary.high|default:0 }}</p>
+        </div>
+
+        <div class="severity-card medium">
+            <h3>🟠 Medium</h3>
+            <p>{{ severity_summary.medium|default:0 }}</p>
+        </div>
+
+        <div class="severity-card low">
+            <h3>🟡 Low</h3>
+            <p>{{ severity_summary.low|default:0 }}</p>
+        </div>
+
+        <div class="severity-card total">
+            <h3>Total Issues</h3>
+            <p>{{ severity_summary.total|default:0 }}</p>
+        </div>
+
+    </div>
+
+    <!-- DETECTED ISSUES -->
+    <div class="issues-section">
+
+        <h2>🔎 Detected Issues</h2>
+
+        {% if issues %}
+
+        <div class="issues-table-container">
+
+            <table class="issues-table">
+
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Tool</th>
+                        <th>Line</th>
+                        <th>Type</th>
+                        <th>Code</th>
+                        <th>Issue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for issue in issues %}
+                    <tr>
+                        <td>
+                            <span class="severity-badge severity-{{ issue.severity|lower }}">
+                                {% if issue.severity == "High" %}
+                                    🔴
+                                {% elif issue.severity == "Medium" %}
+                                    🟠
+                                {% else %}
+                                    🟡
+                                {% endif %}
+                                {{ issue.severity }}
+                            </span>
+                        </td>
+
+                        <td>{{ issue.tool }}</td>
+                        <td>{{ issue.line }}</td>
+                        <td>{{ issue.type }}</td>
+                        <td>{{ issue.code|default:"-" }}</td>
+                        <td>{{ issue.message }}</td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-issues">
+            <p>🎉 No issues detected.</p>
+        </div>
+
+        {% endif %}
+
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="summary-grid">
+
+        <div class="card summary-card">
+            <h3>Quality Score</h3>
+            <p class="summary-value">
+                {% if analysis.quality_score %}
+                    {{ analysis.quality_score }}%
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="card summary-card">
+            <h3>Bugs</h3>
+            <p class="summary-value">
+                {% if analysis.pylint %}
+                    {{ analysis.pylint.total_issues|default:0 }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="card summary-card">
+            <h3>Suggestions</h3>
+            <p class="summary-value">
+                {{ analysis.suggestions|length }}
+            </p>
+        </div>
+
+        <div class="card summary-card">
+            <h3>Time Complexity</h3>
+            <p class="summary-value">
+                {{ analysis.complexity.time_complexity|default:"N/A" }}
+            </p>
+        </div>
+
+        <div class="card summary-card">
+            <h3>Security Issues</h3>
+            <p class="summary-value">
+                {% if analysis.bandit %}
+                    {{ analysis.bandit.total_issues|default:0 }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- CODE ANALYSIS SCORES -->
+    <div class="score-section">
+
+        <h2>Code Analysis Scores</h2>
+
+        <div class="score-grid">
+
+            <div class="score-card">
+                <h3>{{ scores.overall.score|default:"N/A" }}</h3>
+                <p>Overall Score</p>
+                <span>{{ scores.overall.rating }}</span>
+                <small>{{ scores.overall.message }}</small>
+            </div>
+
+            <div class="score-card">
+                <h3>{{ scores.quality.score|default:"N/A" }}</h3>
+                <p>Quality Score</p>
+                <span>{{ scores.quality.rating }}</span>
+                <small>{{ scores.quality.message }}</small>
+            </div>
+
+            <div class="score-card">
+                <h3>{{ scores.security.score|default:"N/A" }}</h3>
+                <p>Security Score</p>
+                <span>{{ scores.security.rating }}</span>
+                <small>{{ scores.security.message }}</small>
+            </div>
+
+            <div class="score-card">
+                <h3>{{ scores.complexity.score|default:"N/A" }}</h3>
+                <p>Complexity Score</p>
+                <span>{{ scores.complexity.rating }}</span>
+                <small>{{ scores.complexity.message }}</small>
+            </div>
+
+            <div class="score-card">
+                <h3>{{ scores.maintainability.score|default:"N/A" }}</h3>
+                <p>Maintainability Score</p>
+                <span>{{ scores.maintainability.rating }}</span>
+                <small>{{ scores.maintainability.message }}</small>
+            </div>
+        </div>
+
+        <div class="score-info">
+        {% if scores.overall.score >= 80 %}
+            <p class="good-message">✓ Excellent code quality. Your code is in good condition.</p>
+        {% elif scores.overall.score >= 60 %}
+            <p class="average-message">⚠ Good code, but some improvements are recommended.</p>
+        {% elif scores.overall.score %}
+            <p class="poor-message">⚠ Several improvements are required.</p>
+        {% endif %}
+        </div>
+    </div>
+
+    {% if analysis.language == "Python" %}
+
+    <!-- FLAKE8 DASHBOARD -->
+    <div class="full-section flake8-dashboard">
+        <h2>🔍 Flake8 Code Quality Analysis</h2>
+        {% if analysis.flake8.success %}
+
+        <div class="flake8-summary">
+
+            <div class="metric-row">
+                <span>Total Flake8 Issues</span>
+                <strong>{{ analysis.flake8.total_issues }}</strong>
+            </div>
+
+        </div>
+        {% if analysis.flake8.issues %}
+        <div class="flake8-issues">
+
+            {% for issue in analysis.flake8.issues %}
+
+            <div class="flake8-issue">
+
+                <div class="issue-header">
+                    <strong>{{ issue.code }}</strong>
+
+                    <span>
+                        Line {{ issue.line }},
+                        Column {{ issue.column }}
+                    </span>
+                </div>
+
+                <p>{{ issue.message }}</p>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+        {% else %}
+        <p>No Flake8 issues found.</p>
+        {% endif %}
+        {% else %}
+        <p>Flake8 analysis could not be completed.</p>
+
+        {% if analysis.flake8.error %}
+        <p>{{ analysis.flake8.error }}</p>
+        {% endif %}
+
+        {% endif %}
+
+    </div>
+
+    <!-- BANDIT DASHBOARD -->
+    <div class="full-section bandit-dashboard">
+
+        <h2>🛡️ Bandit Security Analysis</h2>
+        <br>
+        {% if analysis.bandit.success %}
+
+        <div class="summary-grid">
+
+            <div class="card summary-card">
+                <h3>Total Security Issues</h3>
+                <p class="summary-value">
+                    {{ analysis.bandit.total_issues }}
+                </p>
+            </div>
+
+            <div class="card summary-card">
+                <h3>High</h3>
+                <p class="summary-value">
+                    {{ analysis.bandit.high }}
+                </p>
+            </div>
+
+            <div class="card summary-card">
+                <h3>Medium</h3>
+                <p class="summary-value">
+                    {{ analysis.bandit.medium }}
+                </p>
+            </div>
+
+            <div class="card summary-card">
+                <h3>Low</h3>
+                <p class="summary-value">
+                    {{ analysis.bandit.low }}
+                </p>
+            </div>
+        </div>
+
+        {% if analysis.bandit.issues %}
+        <div class="bandit-issues">
+            {% for issue in analysis.bandit.issues %}
+            <div class="bandit-issue">
+                <div class="issue-header">
+                    <strong>{{ issue.code }}</strong>
+                    <span class="severity-{{ issue.severity|lower }}">
+                        {{ issue.severity }}
+                    </span>
+
+                </div>
+
+                <p>{{ issue.message }}</p>
+
+                <small>
+                    Line {{ issue.line }},
+                    Column {{ issue.column }},
+                    Confidence: {{ issue.confidence }}
+                </small>
+
+            </div>
+
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>No security issues found.</p>
+        {% endif %}
+        {% else %}
+        <p>Bandit security analysis could not be completed.</p>
+        {% if analysis.bandit.error %}
+        <p>{{ analysis.bandit.error }}</p>
+        {% endif %}
+        {% endif %}
+
+    </div>
+
+    <!-- RADON COMPLEXITY + MAINTAINABILITY -->
+    <h2>Code Complexity</h2>
+
+    {% if analysis.radon and analysis.radon.complexity.success %}
+
+    <!-- COMPLEXITY SUMMARY -->
+    <div class="complexity-summary">
+
+        <div class="metric-card">
+            <h3>Average Complexity</h3>
+            <p>
+                {{ analysis.radon.complexity.average_complexity }}
+            </p>
+        </div>
+
+        <div class="metric-card">
+            <h3>Highest Complexity</h3>
+            <p>
+                {{ analysis.radon.complexity.highest_complexity }}
+            </p>
+        </div>
+
+    </div>
+
+    <!-- FUNCTION COMPLEXITY + MAINTAINABILITY -->
+    <div class="radon-detail-grid">
+
+        <!-- FUNCTION-LEVEL COMPLEXITY -->
+        <div class="function-complexity">
+            <h3>Function-Level Complexity</h3>
+            {% for function in analysis.radon.complexity.functions %}
+            <div class="issue-item">
+                <div class="issue-header">
+                    <strong>{{ function.name }}</strong>
+                    <span>Line {{ function.line }}</span>
+                </div>
+                <p>
+                    Complexity: {{ function.complexity }}
+                </p>
+                <p>
+                    Level:
+                    <strong>{{ function.level }}</strong>
+                </p>
+                <small>
+                    Rating: {{ function.grade }}
+                </small>
+            </div>
+            {% empty %}
+            <p>No functions detected.</p>
+            {% endfor %}
+        </div>
+
+        <!-- MAINTAINABILITY ANALYSIS -->
+        <div class="maintainability-box">
+
+            <h3>Maintainability Analysis</h3>
+            {% if analysis.radon.maintainability %}
+                {% if analysis.radon.maintainability.success %}
+                <div class="metric-box">
+                    <h3>
+                        {{ analysis.radon.maintainability.maintainability_index }}
+                    </h3>
+                    <p>Maintainability Index</p>
+                </div>
+                <p class="maintainability-rating">
+                    Rating:
+                    <strong>
+                        {{ analysis.radon.maintainability.grade }}
+                    </strong>
+                </p>
+                {% else %}
+                <p>Maintainability analysis failed: {{ analysis.radon.maintainability.error }}</p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <p>Complexity analysis is not available.</p>
+    {% endif %}
+
+    {% endif %}
+
+    <!-- ORIGINAL CODE + OPTIMIZED CODE -->
+    <div class="code-section">
+        <div class="code-box">
+            <h2>Original Code</h2>
+            <pre>{{ code_content }}</pre>
+        </div>
+
+        {% if ai_review.optimized_code %}
+        <div class="code-box">
+            <div class="code-header">
+                <h2>🚀 Optimized Code</h2>
+                <button onclick="copyOptimizedCode()" class="copy-button">Copy Code</button>
+            </div>
+            <pre id="optimized-code">{{ ai_review.optimized_code }}</pre>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- IMPROVEMENT EXAMPLES -->
+    {% if analysis.examples %}
+    <div class="full-section">
+        <h2>Improvement Examples</h2>
+        <div class="examples-grid">
+            {% for example in analysis.examples %}
+            <div class="example-card">
+                <h3>{{ example.problem }}</h3>
+                <h4>Before</h4>
+                <pre>{{ example.before }}</pre>
+                <h4>After</h4>
+                <pre>{{ example.after }}</pre>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- AI CODE REVIEW -->
+    <div class="full-section ai-review">
+        <h2>🤖 AI Code Review</h2>
+        {% if ai_review.bugs or ai_review.quality or ai_review.performance or ai_review.security or ai_review.complexity or ai_review.maintainability or ai_review.suggestions %}
+        <div class="ai-section">
+            <h3>🐞 1. Bugs</h3>
+            <pre>{{ ai_review.bugs }}</pre>
+        </div>
+
+        <div class="ai-section">
+            <h3>📋 2. Code Quality</h3>
+            <pre>{{ ai_review.quality }}</pre>
+        </div>
+
+        <div class="ai-section">
+            <h3>⚡ 3. Performance</h3>
+            <pre>{{ ai_review.performance }}</pre>
+        </div>
+
+        <div class="ai-section">
+            <h3>🔐 4. Security</h3>
+            <pre>{{ ai_review.security }}</pre>
+        </div>
+
+        <div class="ai-section">
+            <h3>🧮 5. Complexity</h3>
+            <pre>{{ ai_review.complexity }}</pre>
+        </div>
+
+        <div class="ai-section">
+            <h3>🛠️ 6. Maintainability</h3>
+            <pre>{{ ai_review.maintainability }}</pre>
+        </div>
+
+        <div class="ai-section">
+            <h3>💡 7. Suggestions</h3>
+            <pre>{{ ai_review.suggestions }}</pre>
+        </div>
+
+        {% else %}
+        <div class="ai-status">
+            <h3>AI Review Status</h3>
+            <p>AI review is currently unavailable.</p>
+            <p>Basic code analysis is still available above.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if optimization_comparison and optimization_comparison.scores %}
+    <div class="full-section optimization-section">
+        <h2>📊 Before vs After Optimization</h2>
+
+        <div class="comparison-grid">
+            <div class="comparison-card">
+                <h3>Quality</h3>
+                <p>{{ optimization_comparison.scores.quality.before }}
+                    →{{ optimization_comparison.scores.quality.after }}</p>
+                <span>
+                    {% if optimization_comparison.scores.quality.change >= 0 %}+{% endif %}{{ optimization_comparison.scores.quality.change }}
+                </span>
+            </div>
+
+            <div class="comparison-card">
+                <h3>Security</h3>
+                <p>{{ optimization_comparison.scores.security.before }}
+                    →{{ optimization_comparison.scores.security.after }}</p>
+                <span>
+                    {% if optimization_comparison.scores.security.change >= 0 %}+{% endif %}{{ optimization_comparison.scores.security.change }}
+                </span>
+            </div>
+
+            <div class="comparison-card">
+                <h3>Complexity</h3>
+                <p>{{ optimization_comparison.scores.complexity.before }}
+                    →{{ optimization_comparison.scores.complexity.after }}</p>
+                <span>
+                    {% if optimization_comparison.scores.complexity.change >= 0 %}+{% endif %}{{ optimization_comparison.scores.complexity.change }}
+                </span>
+            </div>
+
+            <div class="comparison-card">
+                <h3>Maintainability</h3>
+                <p>{{ optimization_comparison.scores.maintainability.before }}
+                    →{{ optimization_comparison.scores.maintainability.after }}</p>
+                <span>
+                    {% if optimization_comparison.scores.maintainability.change >= 0 %}+{% endif %}{{ optimization_comparison.scores.maintainability.change }}
+                </span>
+            </div>
+        </div>
+
+        <div class="comparison-bottom-grid">
+            <div class="improvement-card">
+                <h3>Overall Improvement</h3>
+                <p>{{ optimization_comparison.overall.before }}
+                    →{{ optimization_comparison.overall.after }}</p>
+                <strong>
+                    {% if optimization_comparison.overall.change >= 0 %}+{% endif %}{{ optimization_comparison.overall.change }}
+                </strong>
+            </div>
+
+            <div class="issue-improvement">
+                <h3>Issues</h3>
+                <p>{{ optimization_comparison.issues.before }}
+                    →{{ optimization_comparison.issues.after }}</p>
+                <strong>
+                    {{ optimization_comparison.issues.reduced }} issues reduced
+                </strong>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ANALYSIS COMPLETE -->
+    <div class="completion-box">
+        <h2>Analysis Complete</h2>
+        <p>Your analysis has been saved successfully.</p>
+        <a href="/history/" class="history-btn">
+            View Analysis History
+        </a>
+    </div>
+</div>
+</body>
+</html>

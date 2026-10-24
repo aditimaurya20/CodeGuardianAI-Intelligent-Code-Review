@@ -1,0 +1,140 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Previous Analysis</title>
+
+    <link rel="stylesheet"
+          href="{% static 'css/style.css' %}">
+
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <div class="logo">
+        Code Guardian AI
+    </div>
+
+    <div class="nav-links">
+
+        <a href="/">Home</a>
+
+        <a href="/upload/">Upload</a>
+
+        <a href="/history/">History</a>
+
+    </div>
+
+</nav>
+
+
+<div class="result-container">
+
+    <h1 class="result-heading">
+        Previous Analysis
+    </h1>
+
+
+    <div class="suggestion-box">
+
+        <h2>
+            File Information
+        </h2>
+
+        <p>
+            File:
+            {{ history.code_file.file.name }}
+        </p>
+
+        <p>
+            Language:
+            {{ history.language }}
+        </p>
+
+        <p>
+            Quality Score:
+            {{ history.quality_score }}%
+        </p>
+
+        <p>
+            Analyzed On:
+            {{ history.created_at|date:"d M Y, h:i A" }}
+        </p>
+
+    </div>
+
+
+    <div class="suggestion-box">
+
+        <h2>
+            AI Code Review
+        </h2>
+
+
+        <h3>
+            1. Bugs or Errors
+        </h3>
+
+        <pre>{{ ai_review.bugs }}</pre>
+
+
+        <h3>
+            2. Code Quality
+        </h3>
+
+        <pre>{{ ai_review.quality }}</pre>
+
+
+        <h3>
+            3. Performance
+        </h3>
+
+        <pre>{{ ai_review.performance }}</pre>
+
+
+        <h3>
+            4. Security
+        </h3>
+
+        <pre>{{ ai_review.security }}</pre>
+
+
+        <h3>
+            5. Suggestions
+        </h3>
+
+        <pre>{{ ai_review.suggestions }}</pre>
+
+
+        <h3>
+            6. Optimized Code
+        </h3>
+
+        <pre>{{ ai_review.optimized_code }}</pre>
+
+    </div>
+
+
+    <div class="suggestion-box">
+
+        <h2>
+            Back to History
+        </h2>
+
+        <a href="{% url 'history' %}">
+            View All Analyses
+        </a>
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,98 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Register - Code Reviewer AI</title>
+
+<link rel="stylesheet"
+href="{% static 'css/style.css' %}">
+
+</head>
+
+
+<body>
+
+
+<nav class="navbar">
+
+
+<div class="logo">
+    Code Guardian AI
+</div>
+
+
+<div class="nav-links">
+
+<a href="/">
+Home
+</a>
+
+
+<a href="/login/">
+Login
+</a>
+
+
+</div>
+
+
+</nav>
+
+
+
+<section class="hero">
+
+
+<h1>
+Create Account
+</h1>
+
+{% if error %}
+
+<p style="color:red;">
+    {{ error }}
+</p>
+
+{% endif %}
+
+<form method="POST" class="auth-form">
+
+    {% csrf_token %}
+
+<input
+type="text"
+name="username"
+placeholder="Enter Username"
+required>
+
+<input
+type="email"
+name="email"
+placeholder="Enter Email"
+required>
+
+<input
+type="password"
+name="password"
+placeholder="Enter Password"
+required>
+
+<input
+type="password"
+name="confirm_password"
+placeholder="Confirm Password"
+required>
+
+<button class="btn">
+Register
+</button>
+
+</form>
+</section>
+
+</body>
+
+</html>
